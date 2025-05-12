@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/dielit66/cloud-camp-tt/pkg/middleware"
 )
@@ -13,6 +14,7 @@ func (lb *LoadBalancer) LBRoundRobinMethod(w http.ResponseWriter, r *http.Reques
 		"client_ip":  r.RemoteAddr,
 		"lb_method":  "RoundRobin",
 		"request_id": requestID,
+		"time":       time.Now().Format(time.RFC3339),
 	})
 
 	for i := 0; i < lb.pool.GetBackendsLength(); i++ {
@@ -23,6 +25,7 @@ func (lb *LoadBalancer) LBRoundRobinMethod(w http.ResponseWriter, r *http.Reques
 				"host":       b.URL.String(),
 				"lb_method":  "RoundRobin",
 				"request_id": requestID,
+				"time":       time.Now().Format(time.RFC3339),
 			})
 			continue
 		}
@@ -34,6 +37,7 @@ func (lb *LoadBalancer) LBRoundRobinMethod(w http.ResponseWriter, r *http.Reques
 			"host":       b.URL.String(),
 			"lb_method":  "RoundRobin",
 			"request_id": requestID,
+			"time":       time.Now().Format(time.RFC3339),
 		})
 		return
 	}
@@ -42,6 +46,7 @@ func (lb *LoadBalancer) LBRoundRobinMethod(w http.ResponseWriter, r *http.Reques
 		"client_ip":  r.RemoteAddr,
 		"lb_method":  "RoundRobin",
 		"request_id": requestID,
+		"time":       time.Now().Format(time.RFC3339),
 	})
 	w.WriteHeader(http.StatusServiceUnavailable)
 	w.Write([]byte("service unavailable"))

@@ -24,7 +24,7 @@ func (lb *LoadBalancer) StartServer(cfg *config.Config) error {
 		LBMethod = lb.LBRoundRobinMethod
 
 	case "LC":
-		lb.logger.Info("least Connections method for load balancer was choosen", nil)
+		lb.logger.Info("Least Connections method for load balancer was choosen", nil)
 		LBMethod = lb.LBLeastConnectionsMethod
 
 	default:

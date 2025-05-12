@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/dielit66/cloud-camp-tt/pkg/middleware"
 )
@@ -13,6 +14,7 @@ func (lb *LoadBalancer) LBLeastConnectionsMethod(w http.ResponseWriter, r *http.
 		"client_ip":  r.RemoteAddr,
 		"lb_method":  "LeastConnections",
 		"request_id": requestID,
+		"time":       time.Now().Format(time.RFC3339),
 	})
 
 	b := lb.pool.GetLessLoadedBackend()
@@ -22,6 +24,7 @@ func (lb *LoadBalancer) LBLeastConnectionsMethod(w http.ResponseWriter, r *http.
 			"client_ip":  r.RemoteAddr,
 			"lb_method":  "LeastConnections",
 			"request_id": requestID,
+			"time":       time.Now().Format(time.RFC3339),
 		})
 		w.WriteHeader(http.StatusServiceUnavailable)
 		w.Write([]byte("all backends are down"))
@@ -34,6 +37,7 @@ func (lb *LoadBalancer) LBLeastConnectionsMethod(w http.ResponseWriter, r *http.
 		"active_connections": b.ActiveConnections,
 		"lb_method":          "LeastConnections",
 		"request_id":         requestID,
+		"time":               time.Now().Format(time.RFC3339),
 	})
 
 	b.AddConnection()
@@ -46,6 +50,7 @@ func (lb *LoadBalancer) LBLeastConnectionsMethod(w http.ResponseWriter, r *http.
 		"host":       b.URL.String(),
 		"lb_method":  "LeastConnections",
 		"request_id": requestID,
+		"time":       time.Now().Format(time.RFC3339),
 	})
 
 }
