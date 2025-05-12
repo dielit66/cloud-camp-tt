@@ -6,15 +6,17 @@ import (
 	"time"
 
 	"github.com/dielit66/cloud-camp-tt/internal/backend"
+	"github.com/dielit66/cloud-camp-tt/pkg/logging"
 )
 
 type HealthChecker struct {
 	Endpoint   string
 	Timeout    time.Duration
 	httpClient *http.Client
+	logger     logging.ILogger
 }
 
-func NewHealthChecker(endpoint string, timeout time.Duration) *HealthChecker {
+func NewHealthChecker(endpoint string, timeout time.Duration, l logging.ILogger) *HealthChecker {
 	return &HealthChecker{
 		Endpoint: endpoint,
 		Timeout:  timeout,
@@ -22,6 +24,7 @@ func NewHealthChecker(endpoint string, timeout time.Duration) *HealthChecker {
 		httpClient: &http.Client{
 			Timeout: timeout,
 		},
+		logger: l,
 	}
 }
 

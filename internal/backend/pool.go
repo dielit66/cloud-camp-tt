@@ -4,15 +4,18 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"sync"
+
+	"github.com/dielit66/cloud-camp-tt/pkg/logging"
 )
 
 type Pool struct {
 	Backends []*Backend
 	current  uint
 	mux      sync.RWMutex
+	logger   logging.ILogger
 }
 
-func NewPool(urls []string) *Pool {
+func NewPool(urls []string, l logging.ILogger) *Pool {
 	var pool Pool
 
 	for _, u := range urls {
@@ -21,10 +24,11 @@ func NewPool(urls []string) *Pool {
 			URL:               parsedUrl,
 			Proxy:             httputil.NewSingleHostReverseProxy(parsedUrl),
 			alive:             true,
-			activeConnections: 0,
+			ActiveConnections: 0,
 		})
 	}
 	pool.current = 0
+	pool.logger = l
 
 	return &pool
 }
@@ -64,7 +68,7 @@ func (p *Pool) GetLessLoadedBackend() *Backend {
 			continue
 		}
 
-		if lessLoadedBackend == nil || b.activeConnections < lessLoadedBackend.activeConnections {
+		if lessLoadedBackend == nil || b.ActiveConnections < lessLoadedBackend.ActiveConnections {
 			lessLoadedBackend = b
 		}
 	}

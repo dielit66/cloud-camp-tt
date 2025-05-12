@@ -12,7 +12,7 @@ type Backend struct {
 	Proxy             *httputil.ReverseProxy
 	alive             bool
 	mux               sync.RWMutex
-	activeConnections int32
+	ActiveConnections int32
 }
 
 func (b *Backend) SetAlive(isAlive bool) {
@@ -30,8 +30,8 @@ func (b *Backend) IsAlive() bool {
 }
 
 func (b *Backend) AddConnection() {
-	atomic.AddInt32(&b.activeConnections, 1)
+	atomic.AddInt32(&b.ActiveConnections, 1)
 }
 func (b *Backend) ConnectionDone() {
-	atomic.AddInt32(&b.activeConnections, -1)
+	atomic.AddInt32(&b.ActiveConnections, -1)
 }
