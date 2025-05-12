@@ -15,7 +15,21 @@ import (
 func (lb *LoadBalancer) StartServer(cfg *config.Config) error {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", lb.LBRoundRobinMethod)
+	var LBMethod http.HandlerFunc
+
+	switch cfg.LBMethod {
+
+	case "RR":
+		LBMethod = lb.LBRoundRobinMethod
+
+	case "LC":
+		LBMethod = lb.LBLeastConnectionsMethod
+
+	default:
+		LBMethod = lb.LBRoundRobinMethod
+	}
+
+	mux.HandleFunc("/", LBMethod)
 
 	lb.server = &http.Server{
 		Addr:    ":" + cfg.Port,

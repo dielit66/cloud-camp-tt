@@ -7,6 +7,7 @@ import (
 
 	"github.com/dielit66/cloud-camp-tt/internal/backend"
 	"github.com/dielit66/cloud-camp-tt/internal/config"
+	"github.com/dielit66/cloud-camp-tt/internal/healthcheck"
 	"github.com/dielit66/cloud-camp-tt/internal/server"
 )
 
@@ -22,7 +23,16 @@ func main() {
 
 	pool := backend.NewPool(cfg.BackendPool.URLs)
 
-	go pool.StartHealthChecker(ctx, cfg.BackendPool.HealthCheck.Endpoint, time.Duration(cfg.BackendPool.HealthCheck.TickerTimer)*time.Second)
+	healthChecker := healthcheck.NewHealthChecker(
+		cfg.BackendPool.HealthCheck.Endpoint,
+		time.Duration(cfg.BackendPool.HealthCheck.Timeout)*time.Second,
+	)
+
+	go healthChecker.Start(
+		ctx,
+		pool.Backends,
+		time.Duration(cfg.BackendPool.HealthCheck.Timeout)*time.Second,
+	)
 
 	lb := server.NewLoadBalancer(pool)
 
