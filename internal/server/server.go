@@ -14,7 +14,7 @@ import (
 	"github.com/dielit66/cloud-camp-tt/pkg/middleware"
 )
 
-func (lb *LoadBalancer) StartServer(cfg *config.Config) error {
+func (lb *LoadBalancer) StartServer(cfg *config.Server) error {
 	mux := http.NewServeMux()
 
 	var LBMethod http.HandlerFunc

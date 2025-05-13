@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  loadbalancer:
+    build: ./
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    networks:
+      - net
+    healthcheck:
+      test: [ "CMD-SHELL", "curl", "-f", "http://127.0.0.1:8080/healthcheck || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  net:
+    driver: bridge

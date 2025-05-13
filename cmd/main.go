@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.LoadConfig("config/config.yaml")
+	cfg, err := config.LoadConfig("config.yaml")
 
 	if err != nil {
 		log.Fatalf("error while reading config, err: %v", err)
@@ -40,7 +40,7 @@ func main() {
 
 	lb := server.NewLoadBalancer(pool, logger)
 
-	if err = lb.StartServer(cfg); err != nil {
+	if err = lb.StartServer(&cfg.Server); err != nil {
 		logger.Fatal(err.Error(), nil)
 	}
 }

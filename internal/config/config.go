@@ -3,16 +3,22 @@ package config
 import "github.com/ilyakaznacheev/cleanenv"
 
 type Config struct {
-	Port        string `env:"PORT" env-default:"8080" yaml:"port"`
-	LBMethod    string `yaml:"lb_method"`
-	LoggerLevel int8   `yaml:"logger_level"`
-	BackendPool struct {
-		URLs        []string `yaml:"urls"`
-		HealthCheck struct {
-			Timeout  int    `yaml:"timeout"`
-			Endpoint string `yaml:"endpoint"`
-		} `yaml:"healthcheck"`
-	} `yaml:"pool"`
+	Server      Server      `yaml:"server"`
+	LoggerLevel int8        `yaml:"logger_level"`
+	BackendPool BackendPool `yaml:"pool"`
+}
+
+type Server struct {
+	Port     string `env:"PORT" env-default:"8080" yaml:"port"`
+	LBMethod string `yaml:"lb_method"`
+}
+
+type BackendPool struct {
+	URLs        []string `yaml:"urls"`
+	HealthCheck struct {
+		Timeout  int    `yaml:"timeout"`
+		Endpoint string `yaml:"endpoint"`
+	} `yaml:"healthcheck"`
 }
 
 func LoadConfig(filename string) (*Config, error) {

@@ -1,6 +1,7 @@
-port: 8080
-lb_method: RR  # RR (RoundRobin) || LC (LeastConnections)
 logger_level: 0
+server:
+  port: 8080
+  lb_method: RR  # RR (RoundRobin) || LC (LeastConnections)
 pool: 
   urls:
   - http://127.0.0.1:8081
