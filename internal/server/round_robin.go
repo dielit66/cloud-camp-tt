@@ -55,13 +55,3 @@ func (lb *LoadBalancer) LBRoundRobinMethod(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(err.Code)
 	w.Write(err.ToJSON())
 }
-
-type responseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (rw *responseWriter) WriteHeader(code int) {
-	rw.statusCode = code
-	rw.ResponseWriter.WriteHeader(code)
-}
