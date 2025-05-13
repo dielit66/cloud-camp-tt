@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 func main() {
@@ -19,7 +18,6 @@ func main() {
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(1 * time.Second)
 		fmt.Fprintf(w, "response from backend server on port: %s", port)
 	})
 

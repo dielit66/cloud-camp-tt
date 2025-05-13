@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/dielit66/cloud-camp-tt/internal/config"
+	"github.com/dielit66/cloud-camp-tt/internal/healthcheck"
+	errors_middleware "github.com/dielit66/cloud-camp-tt/pkg/errors/middleware"
 	"github.com/dielit66/cloud-camp-tt/pkg/middleware"
 )
 
@@ -33,10 +35,15 @@ func (lb *LoadBalancer) StartServer(cfg *config.Config) error {
 	}
 
 	mux.HandleFunc("/", LBMethod)
+	mux.HandleFunc("/healthcheck", healthcheck.HealthCheckHandler)
+
+	// Оборачиваем в middleware для RequestID и обработки ошибок
+	handler := middleware.WithRequestID(mux)
+	handler = errors_middleware.ErrorHandler(handler)
 
 	lb.server = &http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: middleware.WithRequestID(mux),
+		Handler: handler,
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

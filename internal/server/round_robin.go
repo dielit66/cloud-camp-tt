@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dielit66/cloud-camp-tt/pkg/errors"
 	"github.com/dielit66/cloud-camp-tt/pkg/middleware"
 )
 
@@ -48,6 +49,19 @@ func (lb *LoadBalancer) LBRoundRobinMethod(w http.ResponseWriter, r *http.Reques
 		"request_id": requestID,
 		"time":       time.Now().Format(time.RFC3339),
 	})
-	w.WriteHeader(http.StatusServiceUnavailable)
-	w.Write([]byte("service unavailable"))
+
+	err := errors.NewAPIError(http.StatusServiceUnavailable, "Sorry, the service is currently unavailable. Please try again later.")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(err.Code)
+	w.Write(err.ToJSON())
+}
+
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
 }

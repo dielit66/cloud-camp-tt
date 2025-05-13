@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dielit66/cloud-camp-tt/pkg/errors"
 	"github.com/dielit66/cloud-camp-tt/pkg/middleware"
 )
 
@@ -26,8 +27,10 @@ func (lb *LoadBalancer) LBLeastConnectionsMethod(w http.ResponseWriter, r *http.
 			"request_id": requestID,
 			"time":       time.Now().Format(time.RFC3339),
 		})
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write([]byte("all backends are down"))
+		err := errors.NewAPIError(http.StatusServiceUnavailable, "Sorry, the service is currently unavailable. Please try again later.")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(err.Code)
+		w.Write(err.ToJSON())
 		return
 	}
 
