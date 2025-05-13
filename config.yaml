@@ -4,6 +4,10 @@ server:
   lb_method: LC  # RR (RoundRobin) || LC (LeastConnections)
 rate_limiter:
   enabled: true
+  db: 
+    host: cache
+    port: 6379
+    password: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
   cleanup_interval: 5m
   refill_interval: 1s
   bucket_expiration : 1h

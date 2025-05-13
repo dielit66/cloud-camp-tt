@@ -30,6 +30,7 @@ type HealthCheck struct {
 
 type RateLimiter struct {
 	Enabled          bool          `yaml:"enabled"`
+	RateLimiterDb    RateLimiterDb `yaml:"db"`
 	CleanupInterval  time.Duration `yaml:"cleanup_interval"`
 	RefillInterval   time.Duration `yaml:"refill_interval"`
 	BucketExpiration time.Duration `yaml:"bucket_expiration"`
@@ -37,6 +38,12 @@ type RateLimiter struct {
 		RefillRate int `yaml:"refill_rate"`
 		MaxTokens  int `yaml:"max_tokens"`
 	} `yaml:"default"`
+}
+
+type RateLimiterDb struct {
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	Password string `yaml:"password"`
 }
 
 func LoadConfig(filename string) (*Config, error) {

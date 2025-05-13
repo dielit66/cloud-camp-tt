@@ -19,8 +19,8 @@ type RedisBucketSettingsRepository struct {
 func NewRedisBucketSettingsRepository(l logging.ILogger, cfg *config.RateLimiter) *RedisBucketSettingsRepository {
 	return &RedisBucketSettingsRepository{
 		db: redis.NewClient(&redis.Options{
-			Addr:     "cache:6379",
-			Password: "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81",
+			Addr:     cfg.RateLimiterDb.Host + ":" + cfg.RateLimiterDb.Port,
+			Password: cfg.RateLimiterDb.Password,
 			DB:       0,
 		}),
 		logger: l,
