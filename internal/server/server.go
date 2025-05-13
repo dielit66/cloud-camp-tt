@@ -10,6 +10,7 @@ import (
 
 	"github.com/dielit66/cloud-camp-tt/internal/config"
 	"github.com/dielit66/cloud-camp-tt/internal/healthcheck"
+	ratelimiter "github.com/dielit66/cloud-camp-tt/internal/rate_limiter"
 	errors_middleware "github.com/dielit66/cloud-camp-tt/pkg/errors/middleware"
 	"github.com/dielit66/cloud-camp-tt/pkg/middleware"
 )
@@ -34,12 +35,14 @@ func (lb *LoadBalancer) StartServer(cfg *config.Server) error {
 		LBMethod = lb.LBRoundRobinMethod
 	}
 
+	// Основной маршрут для load balancer
 	mux.HandleFunc("/", LBMethod)
 	mux.HandleFunc("/healthcheck", healthcheck.HealthCheckHandler)
 
-	// Оборачиваем в middleware для RequestID и обработки ошибок
+	// Оборачиваем в middleware для RequestID, обработки ошибок и rate limiter
 	handler := middleware.WithRequestID(mux)
 	handler = errors_middleware.ErrorHandler(handler)
+	handler = ratelimiter.NewRateLimiterHandler(lb.rl, lb.logger)(handler)
 
 	lb.server = &http.Server{
 		Addr:    ":" + cfg.Port,

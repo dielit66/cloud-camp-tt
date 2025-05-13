@@ -1,13 +1,21 @@
-logger_level: 0
+logger_level: 1
 server:
   port: 8080
   lb_method: RR  # RR (RoundRobin) || LC (LeastConnections)
+rate_limiter:
+  enabled: true
+  cleanup_interval: 5m
+  refill_interval: 100ms
+  bucket_expiration : 1h
+  default:
+    requests_per_sec: 1
+    burst: 2 
 pool: 
   urls:
   - http://127.0.0.1:8081
   - http://127.0.0.1:8082
   - http://127.0.0.1:8083
   healthcheck: 
-    timeout: 1
+    timeout: 2s
     endpoint: /healthcheck
 

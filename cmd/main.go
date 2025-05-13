@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/dielit66/cloud-camp-tt/internal/backend"
 	"github.com/dielit66/cloud-camp-tt/internal/config"
 	"github.com/dielit66/cloud-camp-tt/internal/healthcheck"
+	ratelimiter "github.com/dielit66/cloud-camp-tt/internal/rate_limiter"
+	repository "github.com/dielit66/cloud-camp-tt/internal/repository/bucket"
 	"github.com/dielit66/cloud-camp-tt/internal/server"
 	"github.com/dielit66/cloud-camp-tt/pkg/logging"
 )
@@ -28,17 +29,20 @@ func main() {
 
 	healthChecker := healthcheck.NewHealthChecker(
 		cfg.BackendPool.HealthCheck.Endpoint,
-		time.Duration(cfg.BackendPool.HealthCheck.Timeout)*time.Second,
+		cfg.BackendPool.HealthCheck.Timeout,
 		logger,
 	)
+
+	repo := repository.NewRedisBucketSettingsRepository(logger)
+	rl := ratelimiter.NewRateLimiter(ctx, repo, logger, &cfg.RateLimiter)
 
 	go healthChecker.Start(
 		ctx,
 		pool.Backends,
-		time.Duration(cfg.BackendPool.HealthCheck.Timeout)*time.Second,
+		cfg.BackendPool.HealthCheck.Timeout,
 	)
 
-	lb := server.NewLoadBalancer(pool, logger)
+	lb := server.NewLoadBalancer(pool, logger, rl)
 
 	if err = lb.StartServer(&cfg.Server); err != nil {
 		logger.Fatal(err.Error(), nil)

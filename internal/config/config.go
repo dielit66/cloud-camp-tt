@@ -1,11 +1,16 @@
 package config
 
-import "github.com/ilyakaznacheev/cleanenv"
+import (
+	"time"
+
+	"github.com/ilyakaznacheev/cleanenv"
+)
 
 type Config struct {
 	Server      Server      `yaml:"server"`
 	LoggerLevel int8        `yaml:"logger_level"`
 	BackendPool BackendPool `yaml:"pool"`
+	RateLimiter RateLimiter `yaml:"rate_limiter"`
 }
 
 type Server struct {
@@ -14,11 +19,24 @@ type Server struct {
 }
 
 type BackendPool struct {
-	URLs        []string `yaml:"urls"`
-	HealthCheck struct {
-		Timeout  int    `yaml:"timeout"`
-		Endpoint string `yaml:"endpoint"`
-	} `yaml:"healthcheck"`
+	URLs        []string    `yaml:"urls"`
+	HealthCheck HealthCheck `yaml:"healthcheck"`
+}
+
+type HealthCheck struct {
+	Timeout  time.Duration `yaml:"timeout"`
+	Endpoint string        `yaml:"endpoint"`
+}
+
+type RateLimiter struct {
+	Enabled          bool          `yaml:"enabled"`
+	CleanupInterval  time.Duration `yaml:"cleanup_interval"`
+	RefillInterval   time.Duration `yaml:"refill_interval"`
+	BucketExpiration time.Duration `yaml:"bucket_expiration"`
+	Default          struct {
+		RequestsPerSecond int `yaml:"requests_per_sec"`
+		Burst             int `yaml:"burst"`
+	} `yaml:"default"`
 }
 
 func LoadConfig(filename string) (*Config, error) {
