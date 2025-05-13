@@ -13,12 +13,14 @@ type LoadBalancer struct {
 	pool   *backend.Pool
 	logger logging.ILogger
 	rl     *ratelimiter.RateLimiter
+	repo   ratelimiter.ISettingsRepository
 }
 
-func NewLoadBalancer(pool *backend.Pool, l logging.ILogger, rl *ratelimiter.RateLimiter) *LoadBalancer {
+func NewLoadBalancer(pool *backend.Pool, l logging.ILogger, rl *ratelimiter.RateLimiter, repo ratelimiter.ISettingsRepository) *LoadBalancer {
 	return &LoadBalancer{
 		pool:   pool,
 		logger: l,
 		rl:     rl,
+		repo:   repo,
 	}
 }

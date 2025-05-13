@@ -1,15 +1,15 @@
-logger_level: 1
+logger_level: 0
 server:
   port: 8080
-  lb_method: RR  # RR (RoundRobin) || LC (LeastConnections)
+  lb_method: LC  # RR (RoundRobin) || LC (LeastConnections)
 rate_limiter:
-  enabled: true
+  enabled: false
   cleanup_interval: 5m
-  refill_interval: 100ms
+  refill_interval: 1s
   bucket_expiration : 1h
   default:
-    requests_per_sec: 1
-    burst: 2 
+    refill_rate: 5
+    max_tokens: 10 
 pool: 
   urls:
   - http://127.0.0.1:8081

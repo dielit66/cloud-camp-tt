@@ -2,6 +2,7 @@ package ratelimiter
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -9,18 +10,48 @@ import (
 	"github.com/dielit66/cloud-camp-tt/pkg/logging"
 )
 
+// Config represents the rate limit configuration
 type Config struct {
 	MaxTokens  int `json:"max_tokens"`
 	RefillRate int `json:"refill_rate"`
 }
 
+// AddConfigRequest represents the API request to add/update a configuration
+type AddConfigRequest struct {
+	IP         string `json:"ip"`
+	MaxTokens  int    `json:"max_tokens"`
+	RefillRate int    `json:"refill_rate"`
+}
+
+// Validate validates the request
+func (r *AddConfigRequest) Validate() error {
+	if r.IP == "" {
+		return errors.New("ip is required")
+	}
+	if r.MaxTokens <= 0 {
+		return errors.New("max_tokens must be positive")
+	}
+	if r.RefillRate <= 0 {
+		return errors.New("refill_rate must be positive")
+	}
+	return nil
+}
+
+// ConfigResponse represents the API response
+type ConfigResponse struct {
+	IP         string `json:"ip"`
+	MaxTokens  int    `json:"max_tokens"`
+	RefillRate int    `json:"refill_rate"`
+}
+
 type ISettingsRepository interface {
 	GetConfig(ctx context.Context, ip string) (Config, error)
 	SetConfig(ctx context.Context, ip string, config Config) error
+	DeleteConfig(ctx context.Context, ip string) error // Добавляем метод
 }
 
 type TokenBucket struct {
-	tokens     float64 // Изменено на float64 для точности
+	tokens     float64
 	config     Config
 	lastRefill time.Time
 }
@@ -40,7 +71,6 @@ func NewRateLimiter(ctx context.Context, repo ISettingsRepository, logger loggin
 		buckets:   make(map[string]*TokenBucket),
 		repo:      repo,
 		logger:    logger,
-		ticker:    time.NewTicker(cfg.RefillInterval),
 		cfg:       cfg,
 		isEnabled: cfg.Enabled,
 	}
@@ -64,7 +94,6 @@ func (rl *RateLimiter) IsEnabled() bool {
 }
 
 func (rl *RateLimiter) Allow(ctx context.Context, ip string) bool {
-
 	if !rl.isEnabled {
 		rl.logger.Debug("Rate limiter disabled, allowing request", map[string]interface{}{
 			"ip": ip,
@@ -84,8 +113,8 @@ func (rl *RateLimiter) Allow(ctx context.Context, ip string) bool {
 				"error": err,
 			})
 			cfg = Config{
-				MaxTokens:  rl.cfg.Default.Burst,
-				RefillRate: rl.cfg.Default.RequestsPerSecond,
+				MaxTokens:  rl.cfg.Default.MaxTokens,
+				RefillRate: rl.cfg.Default.RefillRate,
 			}
 		}
 		bucket = &TokenBucket{
@@ -100,9 +129,6 @@ func (rl *RateLimiter) Allow(ctx context.Context, ip string) bool {
 			"refill_rate": cfg.RefillRate,
 		})
 	}
-
-	// Пополнение токенов
-	rl.refillBucket(bucket)
 
 	rl.logger.Info("Checking rate limit for IP", map[string]interface{}{
 		"ip":            ip,
@@ -124,6 +150,15 @@ func (rl *RateLimiter) Allow(ctx context.Context, ip string) bool {
 		"tokens": bucket.tokens,
 	})
 	return false
+}
+
+func (rl *RateLimiter) ClearBucket(ip string) {
+	rl.mutex.Lock()
+	defer rl.mutex.Unlock()
+	delete(rl.buckets, ip)
+	rl.logger.Info("Bucket cleared", map[string]interface{}{
+		"ip": ip,
+	})
 }
 
 func (rl *RateLimiter) StartRefillLoop(ctx context.Context) {

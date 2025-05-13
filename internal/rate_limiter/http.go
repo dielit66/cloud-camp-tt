@@ -1,7 +1,9 @@
 package ratelimiter
 
 import (
+	"net"
 	"net/http"
+	"strings"
 
 	"github.com/dielit66/cloud-camp-tt/pkg/errors"
 	"github.com/dielit66/cloud-camp-tt/pkg/logging"
@@ -38,7 +40,12 @@ func NewRateLimiterHandler(rl *RateLimiter, logger logging.ILogger) func(http.Ha
 // getClientIP извлекает IP-адрес клиента
 func getClientIP(r *http.Request) string {
 	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
-		return forwarded
+		ips := strings.Split(forwarded, ",")
+		return strings.TrimSpace(ips[0])
 	}
-	return r.RemoteAddr
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return ip
 }

@@ -34,8 +34,8 @@ type RateLimiter struct {
 	RefillInterval   time.Duration `yaml:"refill_interval"`
 	BucketExpiration time.Duration `yaml:"bucket_expiration"`
 	Default          struct {
-		RequestsPerSecond int `yaml:"requests_per_sec"`
-		Burst             int `yaml:"burst"`
+		RefillRate int `yaml:"refill_rate"`
+		MaxTokens  int `yaml:"max_tokens"`
 	} `yaml:"default"`
 }
 

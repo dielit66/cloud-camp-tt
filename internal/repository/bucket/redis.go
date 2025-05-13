@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/dielit66/cloud-camp-tt/internal/config"
 	ratelimiter "github.com/dielit66/cloud-camp-tt/internal/rate_limiter"
 	"github.com/dielit66/cloud-camp-tt/pkg/logging"
 	"github.com/redis/go-redis/v9"
@@ -12,9 +13,10 @@ import (
 type RedisBucketSettingsRepository struct {
 	db     *redis.Client
 	logger logging.ILogger
+	cfg    *config.RateLimiter
 }
 
-func NewRedisBucketSettingsRepository(l logging.ILogger) *RedisBucketSettingsRepository {
+func NewRedisBucketSettingsRepository(l logging.ILogger, cfg *config.RateLimiter) *RedisBucketSettingsRepository {
 	return &RedisBucketSettingsRepository{
 		db: redis.NewClient(&redis.Options{
 			Addr:     "cache:6379",
@@ -22,6 +24,7 @@ func NewRedisBucketSettingsRepository(l logging.ILogger) *RedisBucketSettingsRep
 			DB:       0,
 		}),
 		logger: l,
+		cfg:    cfg,
 	}
 }
 
@@ -29,13 +32,16 @@ func (r *RedisBucketSettingsRepository) GetConfig(ctx context.Context, ip string
 	key := "rate_limit:config:" + ip
 	val, err := r.db.Get(ctx, key).Result()
 	if err == redis.Nil {
-		r.logger.Info("no config found, using default", map[string]interface{}{
+		r.logger.Info("No config found, using default", map[string]interface{}{
 			"ip": ip,
 		})
-		return ratelimiter.Config{MaxTokens: 10, RefillRate: 1}, nil
+		return ratelimiter.Config{
+			MaxTokens:  r.cfg.Default.MaxTokens,
+			RefillRate: r.cfg.Default.RefillRate,
+		}, nil
 	}
 	if err != nil {
-		r.logger.Error("failed to get config", map[string]interface{}{
+		r.logger.Error("Failed to get config", map[string]interface{}{
 			"ip":    ip,
 			"error": err.Error(),
 		})
@@ -44,12 +50,25 @@ func (r *RedisBucketSettingsRepository) GetConfig(ctx context.Context, ip string
 
 	var config ratelimiter.Config
 	if err := json.Unmarshal([]byte(val), &config); err != nil {
-		r.logger.Error("failed to unmarshal config", map[string]interface{}{
+		r.logger.Error("Failed to unmarshal config", map[string]interface{}{
 			"ip":    ip,
 			"error": err.Error(),
 		})
 		return ratelimiter.Config{}, err
 	}
+
+	if config.MaxTokens <= 0 || config.RefillRate <= 0 {
+		r.logger.Warn("Invalid config, using default", map[string]interface{}{
+			"ip":          ip,
+			"max_tokens":  config.MaxTokens,
+			"refill_rate": config.RefillRate,
+		})
+		return ratelimiter.Config{
+			MaxTokens:  r.cfg.Default.MaxTokens,
+			RefillRate: r.cfg.Default.RefillRate,
+		}, nil
+	}
+
 	return config, nil
 }
 
@@ -71,7 +90,25 @@ func (r *RedisBucketSettingsRepository) SetConfig(ctx context.Context, ip string
 		})
 		return err
 	}
-	r.logger.Info("Config set for IP ", map[string]interface{}{
+
+	r.logger.Info("Config set for IP", map[string]interface{}{
+		"ip":          ip,
+		"max_tokens":  config.MaxTokens,
+		"refill_rate": config.RefillRate,
+	})
+	return nil
+}
+
+func (r *RedisBucketSettingsRepository) DeleteConfig(ctx context.Context, ip string) error {
+	key := "rate_limit:config:" + ip
+	if err := r.db.Del(ctx, key).Err(); err != nil {
+		r.logger.Error("Failed to delete config", map[string]interface{}{
+			"ip":    ip,
+			"error": err.Error(),
+		})
+		return err
+	}
+	r.logger.Info("Config deleted from Redis", map[string]interface{}{
 		"ip": ip,
 	})
 	return nil

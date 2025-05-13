@@ -33,7 +33,7 @@ func main() {
 		logger,
 	)
 
-	repo := repository.NewRedisBucketSettingsRepository(logger)
+	repo := repository.NewRedisBucketSettingsRepository(logger, &cfg.RateLimiter)
 	rl := ratelimiter.NewRateLimiter(ctx, repo, logger, &cfg.RateLimiter)
 
 	go healthChecker.Start(
@@ -42,7 +42,7 @@ func main() {
 		cfg.BackendPool.HealthCheck.Timeout,
 	)
 
-	lb := server.NewLoadBalancer(pool, logger, rl)
+	lb := server.NewLoadBalancer(pool, logger, rl, repo)
 
 	if err = lb.StartServer(&cfg.Server); err != nil {
 		logger.Fatal(err.Error(), nil)

@@ -38,6 +38,8 @@ func (lb *LoadBalancer) StartServer(cfg *config.Server) error {
 	// Основной маршрут для load balancer
 	mux.HandleFunc("/", LBMethod)
 	mux.HandleFunc("/healthcheck", healthcheck.HealthCheckHandler)
+	mux.HandleFunc("/api/ratelimit/config", lb.handleRateLimitConfig)
+	mux.HandleFunc("/api/ratelimit/config/", lb.handleRateLimitConfig)
 
 	// Оборачиваем в middleware для RequestID, обработки ошибок и rate limiter
 	handler := middleware.WithRequestID(mux)
